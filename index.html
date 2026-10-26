@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>温馨家庭系统 - Family Hub</title>
+    <style>
+        :root {
+            --primary-color: #ff7b93;
+            --primary-hover: #ff5c77;
+            --bg-color: #fff9fa;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-sub: #777777;
+            --border-color: #ffe6eb;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+        }
+
+        /* 登录页面样式 */
+        #login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+        }
+        .login-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 320px;
+            text-align: center;
+        }
+        .login-card h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        .login-card input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        .login-card button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+        .login-card button:hover {
+            background-color: var(--primary-hover);
+        }
+        .error-msg {
+            color: #ff4d4f;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            display: none;
+        }
+
+        /* 主界面样式 */
+        #app-container {
+            display: none;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 15px 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .logout-btn {
+            background-color: #ff4d4f;
+            padding: 6px 14px;
+            border-radius: 20px;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        /* 布局网格 */
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .grid-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .panel h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        /* 生日列表 */
+        .birthday-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed #eee;
+            font-size: 0.95rem;
+        }
+
+        /* 打卡系统 */
+        .checkin-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .checkin-btn {
+            background-color: #52c41a;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: opacity 0.2s;
+        }
+        .checkin-btn:disabled {
+            background-color: #d9d9d9;
+            cursor: not-allowed;
+        }
+        .streak-badge {
+            color: #faad14;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        /* 相册系统 */
+        .photo-upload-box {
+            border: 2px dashed var(--primary-color);
+            padding: 15px;
+            text-align: center;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 15px;
+            color: var(--text-sub);
+            background: var(--bg-color);
+        }
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+        }
+        .photo-card {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            aspect-ratio: 1;
+        }
+        .photo-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .delete-photo {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 77, 79, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 登录界面 -->
+    <div id="login-container">
+        <div class="login-card">
+            <h2>🏡 家庭系统登录</h2>
+            <input type="text" id="username" placeholder="请输入账号 (baba/mama/erzi/meimei)">
+            <input type="password" id="password" placeholder="请输入密码">
+            <button onclick="handleLogin()">登 录</button>
+            <div id="error-msg" class="error-msg">账号或密码错误！</div>
+        </div>
+    </div>
+
+    <!-- 主系统界面 -->
+    <div id="app-container">
+        <header>
+            <h1>🏡 温馨家庭系统</h1>
+            <div class="user-info">
+                <span id="welcome-user">欢迎您！</span>
+                <button class="logout-btn" onclick="handleLogout()">退出登录</button>
+            </div>
+        </header>
+
+        <div class="grid-layout">
+            <!-- 左侧：生日列表 & 打卡系统 -->
+            <div>
+                <!-- 生日模块 -->
+                <div class="panel">
+                    <h3>🎂 家人生日一览</h3>
+                    <div class="birthday-item"><span>👨 爸爸 (baba)</span> <span>05月15日</span></div>
+                    <div class="birthday-item"><span>👩 妈妈 (mama)</span> <span>08月22日</span></div>
+                    <div class="birthday-item"><span>👦 儿子 (erzi)</span> <span>11月10日</span></div>
+                    <div class="birthday-item"><span>👧 妹妹 (meimei)</span> <span>03月05日</span></div>
+                </div>
+
+                <!-- 每日打卡模块 -->
+                <div class="panel">
+                    <h3>✨ 每日全家打卡</h3>
+                    <div id="checkin-list">
+                        <!-- 动态渲染打卡项 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：家庭相册 -->
+            <div>
+                <div class="panel">
+                    <h3>📸 家庭共享相册</h3>
+                    <div class="photo-upload-box" onclick="document.getElementById('file-input').click()">
+                        点击上传照片 📷
+                        <input type="file" id="file-input" accept="image/*" style="display: none;" onchange="uploadPhoto(event)">
+                    </div>
+                    <div class="photo-grid" id="photo-grid">
+                        <!-- 动态渲染照片 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 账号密码数据库
+        const users = {
+            "baba": { pass: "baba123456", name: "爸爸" },
+            "mama": { pass: "mama123456", name: "妈妈" },
+            "erzi": { pass: "erzi123456", name: "儿子" },
+            "meimei": { pass: "meimei123456", name: "妹妹" }
+        };
+
+        let currentUser = null;
+
+        // 初始化本地存储数据（打卡与相册）
+        if (!localStorage.getItem('family_checkins')) {
+            const initialCheckins = {
+                "baba": { lastCheckin: 0, streak: 0 },
+                "mama": { lastCheckin: 0, streak: 0 },
+                "erzi": { lastCheckin: 0, streak: 0 },
+                "meimei": { lastCheckin: 0, streak: 0 }
+            };
+            localStorage.setItem('family_checkins', JSON.stringify(initialCheckins));
+        }
+
+        if (!localStorage.getItem('family_photos')) {
+            localStorage.setItem('family_photos', JSON.stringify([]));
+        }
+
+        // 登录逻辑
+        function handleLogin() {
+            const u = document.getElementById('username').value.trim();
+            const p = document.getElementById('password').value.trim();
+            const err = document.getElementById('error-msg');
+
+            if (users[u] && users[u].pass === p) {
+                currentUser = u;
+                localStorage.setItem('current_user', u);
+                showApp();
+            } else {
+                err.style.display = 'block';
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('current_user');
+            currentUser = null;
+            document.getElementById('app-container').style.display = 'none';
+            document.getElementById('login-container').style.display = 'flex';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        function showApp() {
+            document.getElementById('login-container').style.display = 'none';
+            document.getElementById('app-container').style.display = 'block';
+            document.getElementById('welcome-user').innerText = `欢迎，${users[currentUser].name}！`;
+            renderCheckins();
+            renderPhotos();
+        }
+
+        // 检查自动登录状态
+        window.onload = function() {
+            const savedUser = localStorage.getItem('current_user');
+            if (savedUser && users[savedUser]) {
+                currentUser = savedUser;
+                showApp();
+            }
+        };
+
+        // --- 打卡逻辑 (24小时冷却 + 连续天数计算) ---
+        function renderCheckins() {
+            const checkins = JSON.parse(localStorage.getItem('family_checkins'));
+            const container = document.getElementById('checkin-list');
+            container.innerHTML = '';
+
+            const now = Date.now();
+            const ONE_DAY = 24 * 60 * 60 * 1000; // 24小时的毫秒数
+
+            Object.keys(users).forEach(username => {
+                const data = checkins[username];
+                const isCurrent = (username === currentUser);
+                
+                // 判断距离上次打卡是否过了24小时
+                const timePassed = now - data.lastCheckin;
+                const canCheckin = timePassed >= ONE_DAY || data.lastCheckin === 0;
+
+                // 如果超过48小时没打卡，连续天数归零
+                if (data.lastCheckin > 0 && timePassed > (2 * ONE_DAY)) {
+                    data.streak = 0;
+                }
+
+                const row = document.createElement('div');
+                row.className = 'checkin-row';
+                
+                let btnHtml = '';
+                if (isCurrent) {
+                    if (canCheckin) {
+                        btnHtml = `<button class="checkin-btn" onclick="doCheckin('${username}')">点击打卡</button>`;
+                    } else {
+                        const hoursLeft = Math.ceil((ONE_DAY - timePassed) / (60 * 60 * 1000));
+                        btnHtml = `<button class="checkin-btn" disabled>${hoursLeft}小时后可打卡</button>`;
+                    }
+                } else {
+                    btnHtml = `<span style="color:var(--text-sub); font-size:0.85rem;">${canCheckin ? '今日未打卡' : '已打卡'}</span>`;
+                }
+
+                row.innerHTML = `
+                    <span><b>${users[username].name}</b></span>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <span class="streak-badge">🔥 连续 ${data.streak} 天</span>
+                        ${btnHtml}
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+            localStorage.setItem('family_checkins', JSON.stringify(checkins));
+        }
+
+        function doCheckin(username) {
+            const checkins = JSON.parse(localStorage.getItem('family_checkins'));
+            const data = checkins[username];
+            const now = Date.now();
+            
+            data.streak += 1;
+            data.lastCheckin = now;
+            
+            localStorage.setItem('family_checkins', JSON.stringify(checkins));
+            renderCheckins();
+        }
+
+        // --- 相册逻辑 (上传与删除) ---
+        function uploadPhoto(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const photos = JSON.parse(localStorage.getItem('family_photos'));
+                photos.unshift({ id: Date.now(), url: e.target.result, uploader: users[currentUser].name });
+                localStorage.setItem('family_photos', JSON.stringify(photos));
+                renderPhotos();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function renderPhotos() {
+            const photos = JSON.parse(localStorage.getItem('family_photos'));
+            const grid = document.getElementById('photo-grid');
+            grid.innerHTML = '';
+
+            if (photos.length === 0) {
+                grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-sub); font-size: 0.9rem;">暂无照片，快来上传第一张家庭合影吧！</p>`;
+                return;
+            }
+
+            photos.forEach(photo => {
+                const card = document.createElement('div');
+                card.className = 'photo-card';
+                card.innerHTML = `
+                    <img src="${photo.url}" alt="家庭照片">
+                    <button class="delete-photo" onclick="deletePhoto(${photo.id})">×</button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function deletePhoto(id) {
+            let photos = JSON.parse(localStorage.getItem('family_photos'));
+            photos = photos.filter(p => p.id !== id);
+            localStorage.setItem('family_photos', JSON.stringify(photos));
+            renderPhotos();
+        }
+    </script>
+</body>
+</html>
