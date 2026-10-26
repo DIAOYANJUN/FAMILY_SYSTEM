@@ -476,10 +476,10 @@
     </div>
 
     <script>
-        // 账号数据库与生日信息
+        // 更新后的家人生日数据库 (MM-DD)
         const users = {
-            "baba": { pass: "baba123456", name: "爸爸", role: "父亲", birthday: "11-13", emoji: "👨" },
-            "mama": { pass: "mama123456", name: "妈妈", role: "母亲", birthday: "06-29", emoji: "👩" },
+            "baba": { pass: "baba123456", name: "爸爸", role: "父亲", birthday: "12-23", emoji: "👨" },
+            "mama": { pass: "mama123456", name: "妈妈", role: "母亲", birthday: "07-15", emoji: "👩" },
             "erzi": { pass: "erzi123456", name: "儿子", role: "儿子", birthday: "05-03", emoji: "👦" },
             "meimei": { pass: "meimei123456", name: "妹妹", role: "妹妹", birthday: "01-09", emoji: "👧" }
         };
@@ -530,11 +530,10 @@
             document.getElementById('welcome-user').innerText = `欢迎，${users[currentUser].name}！`;
             document.getElementById('mailbox-owner').innerText = users[currentUser].name;
             
-            refreshData(); // 加载并同步所有数据
+            refreshData();
             initCanvas();
         }
 
-        // --- 核心：刷新并同步所有数据的函数 ---
         function refreshData() {
             renderBirthdays();
             renderCheckins();
@@ -551,7 +550,6 @@
             }
         };
 
-        // --- 生日倒计时 ---
         function getDaysUntilBirthday(birthdayStr) {
             const today = new Date();
             const currentYear = today.getFullYear();
@@ -585,7 +583,6 @@
             });
         }
 
-        // --- 打卡系统 ---
         function getTodayDateStr() {
             const d = new Date();
             return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
@@ -659,7 +656,6 @@
             }
         }
 
-        // --- 画画与赠送/信箱逻辑 ---
         let canvas, ctx;
         let isDrawing = false;
         let brushSize = 3;
@@ -756,7 +752,6 @@
             clearCanvas();
         }
 
-        // --- 个人信箱渲染与删除 ---
         function renderMailbox() {
             const mailboxes = JSON.parse(localStorage.getItem('family_mailboxes'));
             const myMailbox = mailboxes[currentUser] || [];
@@ -787,7 +782,6 @@
             renderMailbox();
         }
 
-        // --- 公共相册渲染与删除 ---
         function uploadPhoto(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -830,7 +824,6 @@
             renderPhotos();
         }
 
-        // --- 生日弹窗 ---
         function checkTodayBirthday() {
             const today = new Date();
             const currentMonth = String(today.getMonth() + 1).padStart(2, '0');
