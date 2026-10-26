@@ -76,7 +76,7 @@
         /* 主界面样式 */
         #app-container {
             display: none;
-            max-width: 900px;
+            max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -182,45 +182,125 @@
             font-size: 0.9rem;
         }
 
-        /* 相册系统 */
-        .photo-upload-box {
-            border: 2px dashed var(--primary-color);
-            padding: 15px;
-            text-align: center;
+        /* 画画板样式 */
+        .drawing-box {
+            border: 2px solid #ddd;
             border-radius: 10px;
-            cursor: pointer;
-            margin-bottom: 15px;
-            color: var(--text-sub);
-            background: var(--bg-color);
+            background: #fff;
+            touch-action: none;
+            width: 100%;
+            height: 180px;
+            cursor: crosshair;
         }
-        .photo-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        .tool-bar {
+            display: flex;
             gap: 10px;
+            align-items: center;
+            margin: 8px 0;
+            flex-wrap: wrap;
         }
-        .photo-card {
+        .color-picker {
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            background: none;
+        }
+        .tool-btn {
+            background: #f0f0f0;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .tool-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+        .send-panel {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            align-items: center;
+        }
+        .send-panel select {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 0.9rem;
+        }
+        .send-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        /* 信箱与相册通用网格 */
+        .mailbox-grid, .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 10px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        .mail-card, .photo-card {
             position: relative;
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             aspect-ratio: 1;
+            background: #fafafa;
+            border: 1px solid #eee;
         }
-        .photo-card img {
+        .mail-card img, .photo-card img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        .delete-photo {
+        .mail-sender {
             position: absolute;
-            top: 5px;
-            right: 5px;
-            background: rgba(255, 77, 79, 0.8);
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            font-size: 0.75rem;
+            padding: 2px 4px;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .photo-upload-box {
+            border: 2px dashed var(--primary-color);
+            padding: 10px;
+            text-align: center;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 12px;
+            color: var(--text-sub);
+            background: var(--bg-color);
+            font-size: 0.9rem;
+        }
+        .delete-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(255, 77, 79, 0.85);
             color: white;
             border: none;
             border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            font-size: 12px;
+            width: 22px;
+            height: 22px;
+            font-size: 11px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -261,8 +341,8 @@
             animation: pulse 1s infinite alternate;
         }
         .modal-content img {
-            width: 100px;
-            height: 100px;
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
             object-fit: cover;
             margin: 10px 0;
@@ -312,36 +392,56 @@
         </header>
 
         <div class="grid-layout">
-            <!-- 左侧：生日倒计时 & 每日打卡 -->
+            <!-- 左侧：生日倒计时 & 个人信箱 -->
             <div>
                 <!-- 生日模块 -->
                 <div class="panel">
                     <h3>🎂 家人生日倒计时</h3>
-                    <div id="birthday-list">
-                        <!-- 动态渲染生日 -->
-                    </div>
+                    <div id="birthday-list"></div>
                 </div>
 
-                <!-- 每日打卡模块 -->
+                <!-- 个人专属信箱模块 -->
                 <div class="panel">
-                    <h3>✨ 每日全家打卡 (每日零点重置)</h3>
-                    <div id="checkin-list">
-                        <!-- 动态渲染打卡 -->
-                    </div>
+                    <h3>📬 我的专属信箱 (<span id="mailbox-owner"></span>)</h3>
+                    <div class="mailbox-grid" id="mailbox-grid"></div>
                 </div>
             </div>
 
-            <!-- 右侧：家庭相册 -->
+            <!-- 右侧：画画涂鸦板 & 打卡与相册 -->
             <div>
+                <!-- 画画涂鸦板 & 赠送功能 -->
                 <div class="panel">
-                    <h3>📸 家庭共享相册</h3>
+                    <h3>🎨 家庭涂鸦与赠送板</h3>
+                    <canvas id="paint-canvas" class="drawing-box"></canvas>
+                    <div class="tool-bar">
+                        <label>颜色: <input type="color" id="draw-color" class="color-picker" value="#ff7b93"></label>
+                        <button class="tool-btn active" id="pen-size-btn" onclick="setBrushSize(3)">细笔</button>
+                        <button class="tool-btn" id="eraser-btn" onclick="useEraser()">橡皮擦</button>
+                        <button class="tool-btn" onclick="clearCanvas()">清空</button>
+                    </div>
+                    <div class="send-panel">
+                        <select id="recipient-select">
+                            <option value="all">公开到全家相册 🌍</option>
+                            <option value="baba">赠送给：爸爸 👨</option>
+                            <option value="mama">赠送给：妈妈 👩</option>
+                            <option value="erzi">赠送给：儿子 👦</option>
+                            <option value="meimei">赠送给：妹妹 👧</option>
+                        </select>
+                        <button class="send-btn" onclick="sendDrawing()">发送/保存 💌</button>
+                    </div>
+                </div>
+
+                <!-- 每日打卡与家庭相册 -->
+                <div class="panel">
+                    <h3>✨ 每日全家打卡</h3>
+                    <div id="checkin-list" style="margin-bottom: 20px;"></div>
+
+                    <h3>📸 公共家庭相册</h3>
                     <div class="photo-upload-box" onclick="document.getElementById('file-input').click()">
-                        点击上传照片 📷
+                        上传照片到全家相册 📷
                         <input type="file" id="file-input" accept="image/*" style="display: none;" onchange="uploadPhoto(event)">
                     </div>
-                    <div class="photo-grid" id="photo-grid">
-                        <!-- 动态渲染照片 -->
-                    </div>
+                    <div class="photo-grid" id="photo-grid"></div>
                 </div>
             </div>
         </div>
@@ -360,7 +460,7 @@
     </div>
 
     <script>
-        // 账号数据库与已更新的生日信息 (MM-DD格式)
+        // 账号数据库与生日信息
         const users = {
             "baba": { pass: "baba123456", name: "爸爸", role: "父亲", birthday: "11-13", emoji: "👨" },
             "mama": { pass: "mama123456", name: "妈妈", role: "母亲", birthday: "06-29", emoji: "👩" },
@@ -377,8 +477,16 @@
         if (!localStorage.getItem('family_photos')) {
             localStorage.setItem('family_photos', JSON.stringify([]));
         }
+        if (!localStorage.getItem('family_mailboxes')) {
+            // 初始化每个人的信箱为空数组
+            localStorage.setItem('family_mailboxes', JSON.stringify({
+                "baba": [],
+                "mama": [],
+                "erzi": [],
+                "meimei": []
+            }));
+        }
 
-        // 登录逻辑
         function handleLogin() {
             const u = document.getElementById('username').value.trim();
             const p = document.getElementById('password').value.trim();
@@ -406,11 +514,14 @@
             document.getElementById('login-container').style.display = 'none';
             document.getElementById('app-container').style.display = 'block';
             document.getElementById('welcome-user').innerText = `欢迎，${users[currentUser].name}！`;
+            document.getElementById('mailbox-owner').innerText = users[currentUser].name;
             
             renderBirthdays();
             renderCheckins();
             renderPhotos();
-            checkTodayBirthday(); 
+            renderMailbox();
+            checkTodayBirthday();
+            initCanvas();
         }
 
         window.onload = function() {
@@ -421,7 +532,7 @@
             }
         };
 
-        // --- 计算距离生日还有几天 ---
+        // --- 生日倒计时 ---
         function getDaysUntilBirthday(birthdayStr) {
             const today = new Date();
             const currentYear = today.getFullYear();
@@ -433,8 +544,7 @@
             }
             
             const diffTime = bDay - new Date(today.getFullYear(), today.getMonth(), today.getDate());
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            return diffDays;
+            return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         }
 
         function renderBirthdays() {
@@ -456,7 +566,7 @@
             });
         }
 
-        // --- 每日0点重置的打卡系统 ---
+        // --- 打卡系统 ---
         function getTodayDateStr() {
             const d = new Date();
             return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
@@ -530,7 +640,137 @@
             }
         }
 
-        // --- 相册逻辑 ---
+        // --- 画画与赠送/信箱逻辑 ---
+        let canvas, ctx;
+        let isDrawing = false;
+        let brushSize = 3;
+        let isEraser = false;
+
+        function initCanvas() {
+            canvas = document.getElementById('paint-canvas');
+            ctx = canvas.getContext('2d');
+
+            canvas.width = canvas.offsetWidth;
+            canvas.height = 180;
+
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            canvas.onmousedown = startDraw;
+            canvas.onmousemove = drawing;
+            canvas.onmouseup = stopDraw;
+            canvas.onmouseleave = stopDraw;
+
+            canvas.ontouchstart = (e) => { startDraw(e.touches[0]); e.preventDefault(); };
+            canvas.ontouchmove = (e) => { drawing(e.touches[0]); e.preventDefault(); };
+            canvas.ontouchend = stopDraw;
+        }
+
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+        }
+
+        function startDraw(e) {
+            isDrawing = true;
+            const pos = getPos(e);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        }
+
+        function drawing(e) {
+            if (!isDrawing) return;
+            const pos = getPos(e);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.strokeStyle = isEraser ? "#ffffff" : document.getElementById('draw-color').value;
+            ctx.lineWidth = isEraser ? 20 : brushSize;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+        }
+
+        function stopDraw() {
+            isDrawing = false;
+        }
+
+        function clearCanvas() {
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function useEraser() {
+            isEraser = true;
+            document.getElementById('eraser-btn').classList.add('active');
+            document.getElementById('pen-size-btn').classList.remove('active');
+        }
+
+        function setBrushSize(size) {
+            isEraser = false;
+            brushSize = size;
+            document.getElementById('pen-size-btn').classList.add('active');
+            document.getElementById('eraser-btn').classList.remove('active');
+        }
+
+        function sendDrawing() {
+            const dataUrl = canvas.toDataURL('image/png');
+            const recipient = document.getElementById('recipient-select').value;
+            const senderName = users[currentUser].name;
+
+            if (recipient === 'all') {
+                // 发送到公共相册
+                const photos = JSON.parse(localStorage.getItem('family_photos'));
+                photos.unshift({ id: Date.now(), url: dataUrl, uploader: senderName + " (画作)" });
+                localStorage.setItem('family_photos', JSON.stringify(photos));
+                renderPhotos();
+                alert("画作已成功分享到公共家庭相册！🌍");
+            } else {
+                // 发送到指定家庭成员的专属信箱
+                const mailboxes = JSON.parse(localStorage.getItem('family_mailboxes'));
+                if (!mailboxes[recipient]) mailboxes[recipient] = [];
+                
+                mailboxes[recipient].unshift({ id: Date.now(), url: dataUrl, sender: senderName });
+                localStorage.setItem('family_mailboxes', JSON.stringify(mailboxes));
+                
+                const receiverName = users[recipient].name;
+                alert(`画作已成功放入 [${receiverName}] 的专属信箱！💌`);
+            }
+            clearCanvas();
+        }
+
+        // --- 个人信箱渲染与删除 ---
+        function renderMailbox() {
+            const mailboxes = JSON.parse(localStorage.getItem('family_mailboxes'));
+            const myMailbox = mailboxes[currentUser] || [];
+            const grid = document.getElementById('mailbox-grid');
+            grid.innerHTML = '';
+
+            if (myMailbox.length === 0) {
+                grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-sub); font-size: 0.85rem;">信箱空空的，快让家人送你一幅画吧！</p>`;
+                return;
+            }
+
+            myMailbox.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'mail-card';
+                card.innerHTML = `
+                    <img src="${item.url}" alt="收到的画">
+                    <div class="mail-sender">来自：${item.sender}</div>
+                    <button class="delete-btn" onclick="deleteMail(${item.id})">×</button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function deleteMail(id) {
+            const mailboxes = JSON.parse(localStorage.getItem('family_mailboxes'));
+            mailboxes[currentUser] = mailboxes[currentUser].filter(m => m.id !== id);
+            localStorage.setItem('family_mailboxes', JSON.stringify(mailboxes));
+            renderMailbox();
+        }
+
+        // --- 公共相册渲染与删除 ---
         function uploadPhoto(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -551,7 +791,7 @@
             grid.innerHTML = '';
 
             if (photos.length === 0) {
-                grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-sub); font-size: 0.9rem;">暂无照片，快来上传第一张家庭合影吧！</p>`;
+                grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-sub); font-size: 0.85rem;">暂无照片</p>`;
                 return;
             }
 
@@ -559,8 +799,8 @@
                 const card = document.createElement('div');
                 card.className = 'photo-card';
                 card.innerHTML = `
-                    <img src="${photo.url}" alt="家庭照片">
-                    <button class="delete-photo" onclick="deletePhoto(${photo.id})">×</button>
+                    <img src="${photo.url}" alt="家庭图片">
+                    <button class="delete-btn" onclick="deletePhoto(${photo.id})">×</button>
                 `;
                 grid.appendChild(card);
             });
@@ -573,7 +813,7 @@
             renderPhotos();
         }
 
-        // --- 生日当天自动弹出祝福动画与照片 ---
+        // --- 生日弹窗 ---
         function checkTodayBirthday() {
             const today = new Date();
             const currentMonth = String(today.getMonth() + 1).padStart(2, '0');
