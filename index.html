@@ -360,12 +360,12 @@
     </div>
 
     <script>
-        // 账号数据库与生日信息（月-日格式，可根据实际修改）
+        // 账号数据库与已更新的生日信息 (MM-DD格式)
         const users = {
-            "baba": { pass: "baba123456", name: "爸爸", role: "父亲", birthday: "05-15", emoji: "👨" },
-            "mama": { pass: "mama123456", name: "妈妈", role: "母亲", birthday: "08-22", emoji: "👩" },
-            "erzi": { pass: "erzi123456", name: "儿子", role: "儿子", birthday: "11-10", emoji: "👦" },
-            "meimei": { pass: "meimei123456", name: "妹妹", role: "妹妹", birthday: "03-05", emoji: "👧" }
+            "baba": { pass: "baba123456", name: "爸爸", role: "父亲", birthday: "11-13", emoji: "👨" },
+            "mama": { pass: "mama123456", name: "妈妈", role: "母亲", birthday: "06-29", emoji: "👩" },
+            "erzi": { pass: "erzi123456", name: "儿子", role: "儿子", birthday: "05-03", emoji: "👦" },
+            "meimei": { pass: "meimei123456", name: "妹妹", role: "妹妹", birthday: "01-09", emoji: "👧" }
         };
 
         let currentUser = null;
@@ -410,7 +410,7 @@
             renderBirthdays();
             renderCheckins();
             renderPhotos();
-            checkTodayBirthday(); // 检查今天是否有人生日
+            checkTodayBirthday(); 
         }
 
         window.onload = function() {
@@ -428,7 +428,6 @@
             const [month, day] = birthdayStr.split('-').map(Number);
             
             let bDay = new Date(currentYear, month - 1, day);
-            // 如果今年的生日已经过了，计算明年的生日
             if (bDay < new Date(today.getFullYear(), today.getMonth(), today.getDate())) {
                 bDay.setFullYear(currentYear + 1);
             }
@@ -445,11 +444,12 @@
             Object.keys(users).forEach(key => {
                 const user = users[key];
                 const days = getDaysUntilBirthday(user.birthday);
+                const [m, d] = user.birthday.split('-');
                 
                 const item = document.createElement('div');
                 item.className = 'birthday-item';
                 item.innerHTML = `
-                    <span>${user.emoji} <b>${user.name}</b> (${user.birthday.replace('-', '月')}日)</span>
+                    <span>${user.emoji} <b>${user.name}</b> (${m}月${d}日)</span>
                     <span class="birthday-countdown">${days === 0 ? '🎉 今天生日！' : `还有 ${days} 天`}</span>
                 `;
                 container.appendChild(item);
@@ -470,17 +470,14 @@
             const todayStr = getTodayDateStr();
 
             Object.keys(users).forEach(username => {
-                // 如果该用户还没有打卡记录，初始化
                 if (!checkins[username]) {
                     checkins[username] = { lastDate: "", streak: 0, checkedToday: false };
                 }
 
                 const data = checkins[username];
 
-                // 核心：如果记录里的日期不是今天，说明过了午夜0点，自动重置“今日是否打卡”状态
                 if (data.lastDate !== todayStr) {
                     data.checkedToday = false;
-                    // 如果断卡超过1天（比如昨天没打卡），连续天数归零
                     if (data.lastDate) {
                         const lastD = new Date(data.lastDate);
                         const todayD = new Date(todayStr);
@@ -583,7 +580,6 @@
             const currentDay = String(today.getDate()).padStart(2, '0');
             const todayStr = `${currentMonth}-${currentDay}`;
 
-            // 检查今天是谁生日
             let birthdayUser = null;
             Object.keys(users).forEach(key => {
                 if (users[key].birthday === todayStr) {
@@ -591,25 +587,23 @@
                 }
             });
 
-            // 如果今天有人生日，并且今天还没弹出过
             if (birthdayUser) {
                 const modalKey = `birthday_shown_${todayStr}_${birthdayUser.name}`;
                 if (!sessionStorage.getItem(modalKey)) {
                     document.getElementById('modal-title').innerText = `🎉 祝 ${birthdayUser.name} 生日快乐！`;
-                    document.getElementById('modal-text').innerText = `今天是${birthdayUser.role}的生日，全家人祝你福如东海，寿比南山！`;
+                    document.getElementById('modal-text').innerText = `今天是${birthdayUser.role}的生日，全家人祝你天天开心，幸福安康！`;
                     
-                    // 尝试从相册里找一张照片展示，如果没有就隐藏图片位置
                     const photos = JSON.parse(localStorage.getItem('family_photos'));
                     const modalPhoto = document.getElementById('modal-photo');
                     if (photos.length > 0) {
-                        modalPhoto.src = photos[0].url; // 显示相册第一张图
+                        modalPhoto.src = photos[0].url;
                         modalPhoto.style.display = 'block';
                     } else {
                         modalPhoto.style.display = 'none';
                     }
 
                     document.getElementById('birthday-modal').style.display = 'flex';
-                    sessionStorage.setItem(modalKey, 'true'); // 确保当前会话只弹一次
+                    sessionStorage.setItem(modalKey, 'true');
                 }
             }
         }
