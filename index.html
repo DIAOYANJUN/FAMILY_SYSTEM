@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>温馨家庭系统 - Family Hub (云端共享版)</title>
+    <title>温馨家庭系统 - Family Hub</title>
     <style>
         :root {
             --primary-color: #ff7b93;
@@ -20,6 +20,45 @@
             color: var(--text-main);
             margin: 0;
             padding: 0;
+        }
+
+        /* 左右两侧装饰图片样式 */
+        .side-decoration {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+            z-index: 10;
+        }
+        .left-side {
+            left: 20px;
+        }
+        .right-side {
+            right: 20px;
+        }
+        .side-pet {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--primary-color);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            background: white;
+        }
+        .pet-name {
+            font-size: 0.8rem;
+            color: var(--text-sub);
+            font-weight: bold;
+            margin-top: 2px;
+            text-align: center;
+        }
+        @media (max-width: 1200px) {
+            .side-decoration {
+                display: none;
+            }
         }
 
         /* 登录页面样式 */
@@ -385,6 +424,26 @@
 </head>
 <body>
 
+    <!-- 左侧装饰图片：噜噜 和 布布 -->
+    <div class="side-decoration left-side">
+        <div>
+            <img src="lulu.jpeg" alt="噜噜" class="side-pet">
+            <div class="pet-name">噜噜</div>
+        </div>
+        <div>
+            <img src="bubu.jpeg" alt="布布" class="side-pet">
+            <div class="pet-name">布布</div>
+        </div>
+    </div>
+
+    <!-- 右侧装饰图片：一二 -->
+    <div class="side-decoration right-side">
+        <div>
+            <img src="yier.jpeg" alt="一二" class="side-pet">
+            <div class="pet-name">一二</div>
+        </div>
+    </div>
+
     <!-- 登录界面 -->
     <div id="login-container">
         <div class="login-card">
@@ -476,7 +535,6 @@
     </div>
 
     <script>
-        // 账号数据库与生日信息
         const users = {
             "baba": { pass: "baba123456", name: "爸爸", role: "父亲", birthday: "12-23", emoji: "👨" },
             "mama": { pass: "mama123456", name: "妈妈", role: "母亲", birthday: "07-15", emoji: "👩" },
@@ -486,21 +544,16 @@
 
         let currentUser = null;
 
-        // 使用免费的云端数据同步 API (JsonBin 免费公开测试接口或LocalStorage降级)
-        // 为了确保绝对能跑通，这里我们用一个专属的云端同步封装函数
-        const CLOUD_KEY = "family_hub_shared_data_v1";
-
         async function getCloudData() {
             try {
                 const res = await fetch(`https://api.jsonbin.io/v3/b/655c6d3212a5d376599b537c/latest`, {
-                    headers: { "X-Master-Key": "$2a$10$7v5v5v5v5v5v5v5v5v5v5O" } // 公共测试key
+                    headers: { "X-Master-Key": "$2a$10$7v5v5v5v5v5v5v5v5v5v5O" }
                 });
                 const json = await res.json();
                 if (json && json.record) return json.record;
             } catch (e) {
                 console.log("云端连接失败，切换为本地缓存");
             }
-            // 如果云端挂了，自动降级读本地
             return {
                 checkins: JSON.parse(localStorage.getItem('f_checkins') || '{}'),
                 photos: JSON.parse(localStorage.getItem('f_photos') || '[]'),
@@ -509,7 +562,6 @@
         }
 
         async function saveCloudData(data) {
-            // 同时存本地做备份
             localStorage.setItem('f_checkins', JSON.stringify(data.checkins));
             localStorage.setItem('f_photos', JSON.stringify(data.photos));
             localStorage.setItem('f_mailboxes', JSON.stringify(data.mailboxes));
@@ -684,7 +736,6 @@
             }
         }
 
-        // --- 画画板 ---
         let canvas, ctx;
         let isDrawing = false;
         let brushSize = 3;
