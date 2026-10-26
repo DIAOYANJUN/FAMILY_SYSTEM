@@ -136,13 +136,22 @@
             padding-bottom: 10px;
         }
 
-        /* 生日列表 */
+        /* 生日列表项 */
         .birthday-item {
             display: flex;
             justify-content: space-between;
-            padding: 8px 0;
+            align-items: center;
+            padding: 10px 0;
             border-bottom: 1px dashed #eee;
             font-size: 0.95rem;
+        }
+        .birthday-countdown {
+            color: var(--primary-color);
+            font-weight: bold;
+            font-size: 0.85rem;
+            background: #ffe6eb;
+            padding: 2px 8px;
+            border-radius: 10px;
         }
 
         /* 打卡系统 */
@@ -217,6 +226,66 @@
             align-items: center;
             justify-content: center;
         }
+
+        /* 生日弹窗特效样式 */
+        #birthday-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 24px;
+            text-align: center;
+            max-width: 350px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: bounceIn 0.5s ease;
+        }
+        .modal-content h2 {
+            color: var(--primary-color);
+            margin-top: 0;
+            font-size: 1.6rem;
+        }
+        .cake-animation {
+            font-size: 4rem;
+            margin: 15px 0;
+            animation: pulse 1s infinite alternate;
+        }
+        .modal-content img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 10px 0;
+            border: 3px solid var(--primary-color);
+        }
+        .modal-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.15); }
+        }
+        @keyframes bounceIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -243,22 +312,21 @@
         </header>
 
         <div class="grid-layout">
-            <!-- 左侧：生日列表 & 打卡系统 -->
+            <!-- 左侧：生日倒计时 & 每日打卡 -->
             <div>
                 <!-- 生日模块 -->
                 <div class="panel">
-                    <h3>🎂 家人生日一览</h3>
-                    <div class="birthday-item"><span>👨 爸爸 (baba)</span> <span>05月15日</span></div>
-                    <div class="birthday-item"><span>👩 妈妈 (mama)</span> <span>08月22日</span></div>
-                    <div class="birthday-item"><span>👦 儿子 (erzi)</span> <span>11月10日</span></div>
-                    <div class="birthday-item"><span>👧 妹妹 (meimei)</span> <span>03月05日</span></div>
+                    <h3>🎂 家人生日倒计时</h3>
+                    <div id="birthday-list">
+                        <!-- 动态渲染生日 -->
+                    </div>
                 </div>
 
                 <!-- 每日打卡模块 -->
                 <div class="panel">
-                    <h3>✨ 每日全家打卡</h3>
+                    <h3>✨ 每日全家打卡 (每日零点重置)</h3>
                     <div id="checkin-list">
-                        <!-- 动态渲染打卡项 -->
+                        <!-- 动态渲染打卡 -->
                     </div>
                 </div>
             </div>
@@ -279,28 +347,33 @@
         </div>
     </div>
 
+    <!-- 生日快乐弹窗特效 -->
+    <div id="birthday-modal">
+        <div class="modal-content">
+            <h2 id="modal-title">🎉 生日快乐！</h2>
+            <div class="cake-animation">🎂✨</div>
+            <p id="modal-text" style="font-size: 1.1rem; font-weight: bold; margin: 10px 0;"></p>
+            <img id="modal-photo" src="" alt="寿星照片" style="display:none;">
+            <br>
+            <button class="modal-btn" onclick="closeBirthdayModal()">同乐同乐！🥳</button>
+        </div>
+    </div>
+
     <script>
-        // 账号密码数据库
+        // 账号数据库与生日信息（月-日格式，可根据实际修改）
         const users = {
-            "baba": { pass: "baba123456", name: "爸爸" },
-            "mama": { pass: "mama123456", name: "妈妈" },
-            "erzi": { pass: "erzi123456", name: "儿子" },
-            "meimei": { pass: "meimei123456", name: "妹妹" }
+            "baba": { pass: "baba123456", name: "爸爸", role: "父亲", birthday: "05-15", emoji: "👨" },
+            "mama": { pass: "mama123456", name: "妈妈", role: "母亲", birthday: "08-22", emoji: "👩" },
+            "erzi": { pass: "erzi123456", name: "儿子", role: "儿子", birthday: "11-10", emoji: "👦" },
+            "meimei": { pass: "meimei123456", name: "妹妹", role: "妹妹", birthday: "03-05", emoji: "👧" }
         };
 
         let currentUser = null;
 
-        // 初始化本地存储数据（打卡与相册）
+        // 初始化本地存储
         if (!localStorage.getItem('family_checkins')) {
-            const initialCheckins = {
-                "baba": { lastCheckin: 0, streak: 0 },
-                "mama": { lastCheckin: 0, streak: 0 },
-                "erzi": { lastCheckin: 0, streak: 0 },
-                "meimei": { lastCheckin: 0, streak: 0 }
-            };
-            localStorage.setItem('family_checkins', JSON.stringify(initialCheckins));
+            localStorage.setItem('family_checkins', JSON.stringify({}));
         }
-
         if (!localStorage.getItem('family_photos')) {
             localStorage.setItem('family_photos', JSON.stringify([]));
         }
@@ -333,11 +406,13 @@
             document.getElementById('login-container').style.display = 'none';
             document.getElementById('app-container').style.display = 'block';
             document.getElementById('welcome-user').innerText = `欢迎，${users[currentUser].name}！`;
+            
+            renderBirthdays();
             renderCheckins();
             renderPhotos();
+            checkTodayBirthday(); // 检查今天是否有人生日
         }
 
-        // 检查自动登录状态
         window.onload = function() {
             const savedUser = localStorage.getItem('current_user');
             if (savedUser && users[savedUser]) {
@@ -346,41 +421,89 @@
             }
         };
 
-        // --- 打卡逻辑 (24小时冷却 + 连续天数计算) ---
+        // --- 计算距离生日还有几天 ---
+        function getDaysUntilBirthday(birthdayStr) {
+            const today = new Date();
+            const currentYear = today.getFullYear();
+            const [month, day] = birthdayStr.split('-').map(Number);
+            
+            let bDay = new Date(currentYear, month - 1, day);
+            // 如果今年的生日已经过了，计算明年的生日
+            if (bDay < new Date(today.getFullYear(), today.getMonth(), today.getDate())) {
+                bDay.setFullYear(currentYear + 1);
+            }
+            
+            const diffTime = bDay - new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays;
+        }
+
+        function renderBirthdays() {
+            const container = document.getElementById('birthday-list');
+            container.innerHTML = '';
+
+            Object.keys(users).forEach(key => {
+                const user = users[key];
+                const days = getDaysUntilBirthday(user.birthday);
+                
+                const item = document.createElement('div');
+                item.className = 'birthday-item';
+                item.innerHTML = `
+                    <span>${user.emoji} <b>${user.name}</b> (${user.birthday.replace('-', '月')}日)</span>
+                    <span class="birthday-countdown">${days === 0 ? '🎉 今天生日！' : `还有 ${days} 天`}</span>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // --- 每日0点重置的打卡系统 ---
+        function getTodayDateStr() {
+            const d = new Date();
+            return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+        }
+
         function renderCheckins() {
             const checkins = JSON.parse(localStorage.getItem('family_checkins'));
             const container = document.getElementById('checkin-list');
             container.innerHTML = '';
 
-            const now = Date.now();
-            const ONE_DAY = 24 * 60 * 60 * 1000; // 24小时的毫秒数
+            const todayStr = getTodayDateStr();
 
             Object.keys(users).forEach(username => {
-                const data = checkins[username];
-                const isCurrent = (username === currentUser);
-                
-                // 判断距离上次打卡是否过了24小时
-                const timePassed = now - data.lastCheckin;
-                const canCheckin = timePassed >= ONE_DAY || data.lastCheckin === 0;
-
-                // 如果超过48小时没打卡，连续天数归零
-                if (data.lastCheckin > 0 && timePassed > (2 * ONE_DAY)) {
-                    data.streak = 0;
+                // 如果该用户还没有打卡记录，初始化
+                if (!checkins[username]) {
+                    checkins[username] = { lastDate: "", streak: 0, checkedToday: false };
                 }
 
+                const data = checkins[username];
+
+                // 核心：如果记录里的日期不是今天，说明过了午夜0点，自动重置“今日是否打卡”状态
+                if (data.lastDate !== todayStr) {
+                    data.checkedToday = false;
+                    // 如果断卡超过1天（比如昨天没打卡），连续天数归零
+                    if (data.lastDate) {
+                        const lastD = new Date(data.lastDate);
+                        const todayD = new Date(todayStr);
+                        const diffDays = Math.floor((todayD - lastD) / (1000 * 60 * 60 * 24));
+                        if (diffDays > 1) {
+                            data.streak = 0;
+                        }
+                    }
+                }
+
+                const isCurrent = (username === currentUser);
                 const row = document.createElement('div');
                 row.className = 'checkin-row';
-                
+
                 let btnHtml = '';
                 if (isCurrent) {
-                    if (canCheckin) {
+                    if (!data.checkedToday) {
                         btnHtml = `<button class="checkin-btn" onclick="doCheckin('${username}')">点击打卡</button>`;
                     } else {
-                        const hoursLeft = Math.ceil((ONE_DAY - timePassed) / (60 * 60 * 1000));
-                        btnHtml = `<button class="checkin-btn" disabled>${hoursLeft}小时后可打卡</button>`;
+                        btnHtml = `<button class="checkin-btn" disabled>今日已打卡</button>`;
                     }
                 } else {
-                    btnHtml = `<span style="color:var(--text-sub); font-size:0.85rem;">${canCheckin ? '今日未打卡' : '已打卡'}</span>`;
+                    btnHtml = `<span style="color:var(--text-sub); font-size:0.85rem;">${data.checkedToday ? '已打卡' : '未打卡'}</span>`;
                 }
 
                 row.innerHTML = `
@@ -392,22 +515,25 @@
                 `;
                 container.appendChild(row);
             });
+
             localStorage.setItem('family_checkins', JSON.stringify(checkins));
         }
 
         function doCheckin(username) {
             const checkins = JSON.parse(localStorage.getItem('family_checkins'));
             const data = checkins[username];
-            const now = Date.now();
-            
-            data.streak += 1;
-            data.lastCheckin = now;
-            
-            localStorage.setItem('family_checkins', JSON.stringify(checkins));
-            renderCheckins();
+            const todayStr = getTodayDateStr();
+
+            if (!data.checkedToday) {
+                data.checkedToday = true;
+                data.streak += 1;
+                data.lastDate = todayStr;
+                localStorage.setItem('family_checkins', JSON.stringify(checkins));
+                renderCheckins();
+            }
         }
 
-        // --- 相册逻辑 (上传与删除) ---
+        // --- 相册逻辑 ---
         function uploadPhoto(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -448,6 +574,48 @@
             photos = photos.filter(p => p.id !== id);
             localStorage.setItem('family_photos', JSON.stringify(photos));
             renderPhotos();
+        }
+
+        // --- 生日当天自动弹出祝福动画与照片 ---
+        function checkTodayBirthday() {
+            const today = new Date();
+            const currentMonth = String(today.getMonth() + 1).padStart(2, '0');
+            const currentDay = String(today.getDate()).padStart(2, '0');
+            const todayStr = `${currentMonth}-${currentDay}`;
+
+            // 检查今天是谁生日
+            let birthdayUser = null;
+            Object.keys(users).forEach(key => {
+                if (users[key].birthday === todayStr) {
+                    birthdayUser = users[key];
+                }
+            });
+
+            // 如果今天有人生日，并且今天还没弹出过
+            if (birthdayUser) {
+                const modalKey = `birthday_shown_${todayStr}_${birthdayUser.name}`;
+                if (!sessionStorage.getItem(modalKey)) {
+                    document.getElementById('modal-title').innerText = `🎉 祝 ${birthdayUser.name} 生日快乐！`;
+                    document.getElementById('modal-text').innerText = `今天是${birthdayUser.role}的生日，全家人祝你福如东海，寿比南山！`;
+                    
+                    // 尝试从相册里找一张照片展示，如果没有就隐藏图片位置
+                    const photos = JSON.parse(localStorage.getItem('family_photos'));
+                    const modalPhoto = document.getElementById('modal-photo');
+                    if (photos.length > 0) {
+                        modalPhoto.src = photos[0].url; // 显示相册第一张图
+                        modalPhoto.style.display = 'block';
+                    } else {
+                        modalPhoto.style.display = 'none';
+                    }
+
+                    document.getElementById('birthday-modal').style.display = 'flex';
+                    sessionStorage.setItem(modalKey, 'true'); // 确保当前会话只弹一次
+                }
+            }
+        }
+
+        function closeBirthdayModal() {
+            document.getElementById('birthday-modal').style.display = 'none';
         }
     </script>
 </body>
