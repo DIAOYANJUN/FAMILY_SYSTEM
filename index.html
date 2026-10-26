@@ -22,45 +22,6 @@
             padding: 0;
         }
 
-        /* 左右两侧装饰图片样式 */
-        .side-decoration {
-            position: fixed;
-            top: 50%;
-            transform: translateY(-50%);
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            align-items: center;
-            z-index: 10;
-        }
-        .left-side {
-            left: 20px;
-        }
-        .right-side {
-            right: 20px;
-        }
-        .side-pet {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid var(--primary-color);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            background: white;
-        }
-        .pet-name {
-            font-size: 0.8rem;
-            color: var(--text-sub);
-            font-weight: bold;
-            margin-top: 2px;
-            text-align: center;
-        }
-        @media (max-width: 1200px) {
-            .side-decoration {
-                display: none;
-            }
-        }
-
         /* 登录页面样式 */
         #login-container {
             display: flex;
@@ -112,13 +73,55 @@
             display: none;
         }
 
-        /* 主界面样式 */
-        #app-container {
+        /* 主界面外部包裹容器（用于固定两侧宠物） */
+        #app-wrapper {
             display: none;
-            max-width: 1000px;
+            position: relative;
+            max-width: 1150px;
             margin: 0 auto;
             padding: 20px;
         }
+
+        /* 登录后主界面左右两侧的装饰宠物样式 */
+        .side-decoration {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+            z-index: 10;
+        }
+        .left-side {
+            left: 20px;
+        }
+        .right-side {
+            right: 20px;
+        }
+        .side-pet {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--primary-color);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            background: white;
+        }
+        .pet-name {
+            font-size: 0.8rem;
+            color: var(--text-sub);
+            font-weight: bold;
+            margin-top: 2px;
+            text-align: center;
+        }
+        @media (max-width: 1250px) {
+            .side-decoration {
+                display: none; /* 屏幕较小时自动隐藏，防止挤压中间内容 */
+            }
+        }
+
+        /* 主界面内容网格 */
         header {
             display: flex;
             justify-content: space-between;
@@ -164,7 +167,6 @@
             opacity: 0.85;
         }
 
-        /* 布局网格 */
         .grid-layout {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -424,27 +426,7 @@
 </head>
 <body>
 
-    <!-- 左侧装饰图片：噜噜 和 布布 -->
-    <div class="side-decoration left-side">
-        <div>
-            <img src="lulu.jpeg" alt="噜噜" class="side-pet">
-            <div class="pet-name">噜噜</div>
-        </div>
-        <div>
-            <img src="bubu.jpeg" alt="布布" class="side-pet">
-            <div class="pet-name">布布</div>
-        </div>
-    </div>
-
-    <!-- 右侧装饰图片：一二 -->
-    <div class="side-decoration right-side">
-        <div>
-            <img src="yier.jpeg" alt="一二" class="side-pet">
-            <div class="pet-name">一二</div>
-        </div>
-    </div>
-
-    <!-- 登录界面 -->
+    <!-- 登录界面（保持清爽） -->
     <div id="login-container">
         <div class="login-card">
             <h2>🏡 家庭系统登录</h2>
@@ -455,8 +437,28 @@
         </div>
     </div>
 
-    <!-- 主系统界面 -->
-    <div id="app-container">
+    <!-- 登录后的主系统界面（包含左右两侧的宠物装饰） -->
+    <div id="app-wrapper">
+        <!-- 左侧宠物：噜噜 和 布布 -->
+        <div class="side-decoration left-side">
+            <div>
+                <img src="lulu.jpeg" alt="噜噜" class="side-pet">
+                <div class="pet-name">噜噜</div>
+            </div>
+            <div>
+                <img src="bubu.jpeg" alt="布布" class="side-pet">
+                <div class="pet-name">布布</div>
+            </div>
+        </div>
+
+        <!-- 右侧宠物：一二 -->
+        <div class="side-decoration right-side">
+            <div>
+                <img src="yier.jpeg" alt="一二" class="side-pet">
+                <div class="pet-name">一二</div>
+            </div>
+        </div>
+
         <header>
             <h1>🏡 温馨家庭系统 (云端共享)</h1>
             <div class="user-info">
@@ -597,7 +599,7 @@
         function handleLogout() {
             localStorage.removeItem('current_user');
             currentUser = null;
-            document.getElementById('app-container').style.display = 'none';
+            document.getElementById('app-wrapper').style.display = 'none';
             document.getElementById('login-container').style.display = 'flex';
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
@@ -605,7 +607,7 @@
 
         function showApp() {
             document.getElementById('login-container').style.display = 'none';
-            document.getElementById('app-container').style.display = 'block';
+            document.getElementById('app-wrapper').style.display = 'block';
             document.getElementById('welcome-user').innerText = `欢迎，${users[currentUser].name}！`;
             document.getElementById('mailbox-owner').innerText = users[currentUser].name;
             
