@@ -89,6 +89,8 @@
             border-radius: 16px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         header h1 {
             color: var(--primary-color);
@@ -98,16 +100,29 @@
         .user-info {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
+            flex-wrap: wrap;
         }
-        .logout-btn {
-            background-color: #ff4d4f;
+        .action-btn {
             padding: 6px 14px;
             border-radius: 20px;
             color: white;
             border: none;
             cursor: pointer;
             font-size: 0.9rem;
+            transition: opacity 0.2s;
+        }
+        .refresh-btn {
+            background-color: #1890ff;
+        }
+        .refresh-btn:hover {
+            opacity: 0.85;
+        }
+        .logout-btn {
+            background-color: #ff4d4f;
+        }
+        .logout-btn:hover {
+            opacity: 0.85;
         }
 
         /* 布局网格 */
@@ -243,7 +258,7 @@
             white-space: nowrap;
         }
 
-        /* 信箱与相册通用网格 */
+        /* 信箱与相册网格 */
         .mailbox-grid, .photo-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
@@ -387,7 +402,8 @@
             <h1>🏡 温馨家庭系统</h1>
             <div class="user-info">
                 <span id="welcome-user">欢迎您！</span>
-                <button class="logout-btn" onclick="handleLogout()">退出登录</button>
+                <button class="action-btn refresh-btn" onclick="refreshData()">🔄 刷新数据</button>
+                <button class="action-btn logout-btn" onclick="handleLogout()">退出登录</button>
             </div>
         </header>
 
@@ -470,7 +486,6 @@
 
         let currentUser = null;
 
-        // 初始化本地存储
         if (!localStorage.getItem('family_checkins')) {
             localStorage.setItem('family_checkins', JSON.stringify({}));
         }
@@ -478,7 +493,6 @@
             localStorage.setItem('family_photos', JSON.stringify([]));
         }
         if (!localStorage.getItem('family_mailboxes')) {
-            // 初始化每个人的信箱为空数组
             localStorage.setItem('family_mailboxes', JSON.stringify({
                 "baba": [],
                 "mama": [],
@@ -516,12 +530,17 @@
             document.getElementById('welcome-user').innerText = `欢迎，${users[currentUser].name}！`;
             document.getElementById('mailbox-owner').innerText = users[currentUser].name;
             
+            refreshData(); // 加载并同步所有数据
+            initCanvas();
+        }
+
+        // --- 核心：刷新并同步所有数据的函数 ---
+        function refreshData() {
             renderBirthdays();
             renderCheckins();
             renderPhotos();
             renderMailbox();
             checkTodayBirthday();
-            initCanvas();
         }
 
         window.onload = function() {
@@ -719,14 +738,12 @@
             const senderName = users[currentUser].name;
 
             if (recipient === 'all') {
-                // 发送到公共相册
                 const photos = JSON.parse(localStorage.getItem('family_photos'));
                 photos.unshift({ id: Date.now(), url: dataUrl, uploader: senderName + " (画作)" });
                 localStorage.setItem('family_photos', JSON.stringify(photos));
                 renderPhotos();
                 alert("画作已成功分享到公共家庭相册！🌍");
             } else {
-                // 发送到指定家庭成员的专属信箱
                 const mailboxes = JSON.parse(localStorage.getItem('family_mailboxes'));
                 if (!mailboxes[recipient]) mailboxes[recipient] = [];
                 
